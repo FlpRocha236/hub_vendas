@@ -1,0 +1,272 @@
+{% extends 'platform/base.html' %}
+
+{% block content %}
+<style>
+    /* Estilos de Admin Glass */
+    .admin-table th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; }
+    .admin-table td { color: #e2e8f0; vertical-align: middle; }
+    
+    /* Inputs Estilizados */
+    .glass-input {
+        background: #0f172a; border: 1px solid #334155; color: white; width: 100%;
+        padding: 10px; border-radius: 8px; outline: none; transition: 0.3s;
+    }
+    .glass-input:focus { border-color: #ef4444; }
+    label { display: block; color: #94a3b8; font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; }
+</style>
+
+<div class="container py-8">
+    
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h6 class="text-red-500 font-bold uppercase tracking-widest text-xs mb-1">Painel Administrativo</h6>
+            <h2 class="text-3xl font-bold text-white">Meus Produtos</h2>
+        </div>
+        <button onclick="openCourseModal()" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-red-900/20 flex items-center gap-2 transition">
+            + Novo Curso
+        </button>
+    </div>
+
+    <div class="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden backdrop-blur-sm">
+        <table class="w-full text-left admin-table">
+            <thead class="bg-slate-900/80">
+                <tr>
+                    <th class="p-5">Curso</th>
+                    <th class="p-5">Preço</th>
+                    <th class="p-5 text-center">Aulas</th>
+                    <th class="p-5 text-right">Ações</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700">
+                {% for course in courses %}
+                <tr class="hover:bg-slate-700/30 transition group">
+                    <td class="p-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded bg-slate-700 overflow-hidden shrink-0">
+                                {% if course.thumbnail %}
+                                    <img src="{{ course.thumbnail.url }}" class="w-full h-full object-cover">
+                                {% endif %}
+                            </div>
+                            <span class="font-bold">{{ course.title }}</span>
+                        </div>
+                    </td>
+                    <td class="p-5 text-gray-400">R$ {{ course.price }}</td>
+                    <td class="p-5 text-center">
+                        <button onclick="openLessonModal('{{ course.id }}', '{{ course.title|escapejs }}')" class="bg-slate-700 hover:bg-slate-600 text-xs text-white px-3 py-1 rounded-full border border-slate-600 transition">
+                            {{ course.lessons.count }} Aulas
+                        </button>
+                    </td>
+                    <td class="p-5 text-right">
+                        <button onclick="editCourse('{{ course.id }}', '{{ course.title|escapejs }}', '{{ course.price }}', '{{ course.description|escapejs }}', '{{ course.slug }}')" class="text-blue-400 hover:text-white mr-3 font-medium text-sm">Editar</button>
+                        
+                        <a href="{% url 'delete_course' course.id %}" onclick="return confirm('Tem certeza que deseja excluir este curso?')" class="text-red-400 hover:text-white font-medium text-sm">Excluir</a>
+                    </td>
+                </tr>
+                
+                <script>
+                    // Guardamos as aulas deste curso numa variável global para o Modal ler depois
+                    if (typeof window.courseLessons === 'undefined') { window.courseLessons = {}; }
+                    window.courseLessons['{{ course.id }}'] = [
+                        {% for lesson in course.lessons.all %}
+                        {
+                            id: '{{ lesson.id }}',
+                            title: '{{ lesson.title|escapejs }}',
+                            video_url: '{{ lesson.video_url|escapejs }}',
+                            description: '{{ lesson.description|escapejs }}',
+                            order: '{{ lesson.order }}'
+                        },
+                        {% endfor %}
+                    ];
+                </script>
+                
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="courseModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal('courseModal')"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+        <div class="bg-slate-800 w-full max-w-lg rounded-2xl border border-slate-700 shadow-2xl pointer-events-auto p-6">
+            <h3 class="text-xl font-bold text-white mb-6" id="courseModalTitle">Novo Curso</h3>
+            
+            <form method="POST" action="{% url 'save_course' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="course_id" id="course_id"> <div class="space-y-4">
+                    <div>
+                        <label>Título do Curso</label>
+                        <input type="text" name="title" id="id_course_title" class="glass-input" required>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-1/2">
+                            <label>Preço (R$)</label>
+                            <input type="number" step="0.01" name="price" id="id_course_price" class="glass-input" required>
+                        </div>
+                        <div class="w-1/2">
+                            <label>Slug (URL)</label>
+                            <input type="text" name="slug" id="id_course_slug" class="glass-input" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label>Descrição</label>
+                        <textarea name="description" id="id_course_description" rows="3" class="glass-input"></textarea>
+                    </div>
+                    <div>
+                        <label>Thumbnail (Capa)</label>
+                        <input type="file" name="thumbnail" class="glass-input text-xs">
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('courseModal')" class="px-4 py-2 text-slate-400 hover:text-white font-bold">Cancelar</button>
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="lessonModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal('lessonModal')"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+        <div class="bg-slate-900 w-full max-w-4xl rounded-2xl border border-slate-700 shadow-2xl pointer-events-auto flex flex-col md:flex-row overflow-hidden" style="max-height: 85vh;">
+            
+            <div class="w-full md:w-1/2 border-r border-slate-700 flex flex-col">
+                <div class="p-5 border-b border-slate-700 bg-slate-800">
+                    <h3 class="font-bold text-white">Aulas de: <span id="lessonCourseTitle" class="text-red-500">...</span></h3>
+                </div>
+                <div class="flex-1 overflow-y-auto p-2 space-y-2" id="lessonListContainer">
+                    </div>
+            </div>
+
+            <div class="w-full md:w-1/2 p-6 bg-slate-800 overflow-y-auto">
+                <h4 class="text-sm font-bold text-slate-400 uppercase mb-4">Adicionar / Editar Aula</h4>
+                
+                <form method="POST" id="lessonForm" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="lesson_id" id="id_lesson_id">
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label>Título da Aula</label>
+                            <input type="text" name="title" id="id_lesson_title" class="glass-input" required>
+                        </div>
+                        <div>
+                            <label>Link do Vídeo (Embed)</label>
+                            <input type="url" name="video_url" id="id_lesson_url" class="glass-input" placeholder="https://youtube.com/..." required>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="w-1/3">
+                                <label>Ordem</label>
+                                <input type="number" name="order" id="id_lesson_order" class="glass-input" value="1">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Descrição (Opcional)</label>
+                            <textarea name="description" id="id_lesson_desc" rows="3" class="glass-input"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button type="button" onclick="resetLessonForm()" class="px-4 py-2 text-xs text-slate-400 hover:text-white">Limpar</button>
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold w-full">Salvar Aula</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- FUNÇÕES DE MODAL GENÉRICAS ---
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+
+    // --- LÓGICA DE CURSO ---
+    function openCourseModal() {
+        // Limpa o form para "Novo Curso"
+        document.getElementById('course_id').value = '';
+        document.getElementById('id_course_title').value = '';
+        document.getElementById('id_course_price').value = '';
+        document.getElementById('id_course_slug').value = '';
+        document.getElementById('id_course_description').value = '';
+        document.getElementById('courseModalTitle').innerText = 'Novo Curso';
+        
+        document.getElementById('courseModal').classList.remove('hidden');
+    }
+
+    function editCourse(id, title, price, description, slug) {
+        // Preenche o form para "Editar"
+        document.getElementById('course_id').value = id;
+        document.getElementById('id_course_title').value = title;
+        document.getElementById('id_course_price').value = price.replace(',', '.');
+        document.getElementById('id_course_slug').value = slug;
+        document.getElementById('id_course_description').value = description;
+        document.getElementById('courseModalTitle').innerText = 'Editar Curso';
+        
+        document.getElementById('courseModal').classList.remove('hidden');
+    }
+
+    // --- LÓGICA DE AULAS (COMPLEXA) ---
+    function openLessonModal(courseId, courseTitle) {
+        // 1. Atualiza Título e Action do Form
+        document.getElementById('lessonCourseTitle').innerText = courseTitle;
+        document.getElementById('lessonForm').action = "/staff/lesson/save/" + courseId + "/";
+        
+        // 2. Limpa a lista anterior
+        const container = document.getElementById('lessonListContainer');
+        container.innerHTML = '';
+
+        // 3. Pega as aulas desse curso (da variável global que criamos no loop do Django)
+        const lessons = window.courseLessons[courseId] || [];
+
+        // 4. Renderiza a lista de aulas
+        if (lessons.length === 0) {
+            container.innerHTML = '<div class="text-slate-500 text-center text-sm p-4">Nenhuma aula ainda. Adicione ao lado -></div>';
+        } else {
+            lessons.forEach(lesson => {
+                const item = document.createElement('div');
+                item.className = 'bg-slate-800 p-3 rounded-lg border border-slate-700 flex justify-between items-center group hover:border-slate-500 transition';
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="bg-slate-700 text-xs font-bold w-6 h-6 flex items-center justify-center rounded">${lesson.order}</span>
+                        <span class="text-sm font-medium text-white truncate w-32 md:w-48">${lesson.title}</span>
+                    </div>
+                    <div class="flex gap-2 opacity-60 group-hover:opacity-100">
+                        <button onclick="editLesson('${lesson.id}', '${lesson.title.replace(/'/g, "\\'")}', '${lesson.video_url}', '${lesson.order}', '${lesson.description.replace(/'/g, "\\'")}')" class="text-blue-400 hover:text-white p-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </button>
+                        <a href="/staff/lesson/delete/${lesson.id}/" onclick="return confirm('Excluir aula?')" class="text-red-400 hover:text-white p-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </a>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        resetLessonForm(); // Garante que o form comece limpo
+        document.getElementById('lessonModal').classList.remove('hidden');
+    }
+
+    function editLesson(id, title, url, order, desc) {
+        document.getElementById('id_lesson_id').value = id;
+        document.getElementById('id_lesson_title').value = title;
+        document.getElementById('id_lesson_url').value = url;
+        document.getElementById('id_lesson_order').value = order;
+        document.getElementById('id_lesson_desc').value = desc;
+    }
+
+    function resetLessonForm() {
+        document.getElementById('id_lesson_id').value = '';
+        document.getElementById('id_lesson_title').value = '';
+        document.getElementById('id_lesson_url').value = '';
+        document.getElementById('id_lesson_desc').value = '';
+        // Mantém a ordem sequencial se possível, ou reseta pra 1
+        document.getElementById('id_lesson_order').value = '1'; 
+    }
+</script>
+{% endblock %}

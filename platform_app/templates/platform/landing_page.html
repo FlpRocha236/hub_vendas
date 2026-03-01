@@ -1,0 +1,191 @@
+{% extends 'platform/base.html' %}
+
+{% block navbar %}
+<nav class="fixed top-0 left-0 w-full z-50 py-4 transition-all duration-300" style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <div class="container flex justify-between items-center">
+        <a href="/" class="text-decoration-none hover:opacity-80 transition">
+            <span class="font-bold text-xl tracking-tighter text-white">NEXT<span class="text-red-500">CHANGE</span></span>
+        </a>
+
+        <button onclick="toggleLoginModal()" class="p-2 rounded-full hover:bg-white/10 transition border-0 bg-transparent text-gray-400 hover:text-red-500" title="Acesso ao Sistema">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </button>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<style>
+    .bg-glow-wrapper {
+        background: radial-gradient(circle at 50% -20%, #ef444422 0%, #0f172a 65%);
+        width: 100%;
+        padding-bottom: 4rem;
+        padding-top: 120px; 
+    }
+    
+    .glass-card {
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.08); /* Borda padrão */
+        transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+    .glass-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .text-gradient {
+        background: linear-gradient(to right, #ff4d4d, #f97316);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    input[type="text"], input[type="email"] {
+        width: 100%;
+        background-color: #0f172a !important;
+        border: 1px solid #334155;
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        outline: none;
+    }
+    input:focus {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    }
+</style>
+
+<div class="bg-glow-wrapper">
+    <div class="container py-5">
+        <div class="row align-items-center g-5 py-5">
+            
+            <div class="col-lg-7 text-center text-lg-start">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill bg-danger bg-opacity-10 border border-danger border-opacity-20 mb-4">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                    <span class="text-red-500 text-xs fw-bold uppercase tracking-widest">Acesso Antecipado Liberado</span>
+                </div>
+                
+                <h1 class="display-1 fw-black text-white lh-1 mb-4 tracking-tighter">
+                    A Empresa é sua. <br>
+                    <span class="text-gradient">A Plataforma também deve ser.</span>
+                </h1>
+                
+                <p class="lead text-secondary mb-5 fs-4">
+                    Saia do aluguel digital. Hospede seus cursos e mentorias em um ecossistema de elite, com checkout de alta performance e <strong>zero taxas por venda.</strong>
+                </p>
+
+                <div class="row g-4 mt-2 mb-5">
+                    <div class="col-md-4">
+                        <div class="p-4 rounded-4 bg-slate-800 bg-opacity-40 transition-all group h-100 shadow-lg shadow-red-900/10" style="border: 1px solid">
+                            <h5 class="text-white fw-bold mb-2 uppercase tracking-tight">Taxa Zero</h5>
+                            <p class="text-secondary small mb-0 leading-relaxed">Lucro total na sua conta.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="p-4 rounded-4 border border-slate-700 bg-slate-800 bg-opacity-40 hover:border-yellow-500 transition-all group h-100">
+                            <h5 class="text-white fw-bold mb-2 uppercase tracking-tight">White Label</h5>
+                            <p class="text-secondary small mb-0 leading-relaxed">Sua marca no centro.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="p-4 rounded-4 border border-slate-700 bg-slate-800 bg-opacity-40 hover:border-blue-500 transition-all group h-100">
+                            <h5 class="text-white fw-bold mb-2 uppercase tracking-tight">LTV Infinito</h5>
+                            <p class="text-secondary small mb-0 leading-relaxed">Venda mais para o mesmo cliente.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5" id="cadastro">
+                <div class="relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-red-600 to-orange-600 rounded-5 blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                    
+                    <div class="card glass-card rounded-5 p-4 p-md-5 shadow-2xl border-0 relative">
+                        <div class="card-body">
+                            <h3 class="text-3xl font-black text-center text-white mb-2 tracking-tighter uppercase">
+                                Domine o Jogo
+                            </h3>
+                            <p class="text-center text-secondary small mb-5 leading-relaxed">
+                                Entre para o ecossistema de elite. <span class="text-red-500 font-bold">Vagas limitadas.</span>
+                            </p>
+                            
+                            <form method="POST" class="space-y-4">
+                                {% csrf_token %}
+                                <div class="relative">{{ form.name }}</div>
+                                <div class="relative">{{ form.email }}</div>
+                                <button type="submit" class="btn w-full py-4 fw-black rounded-4 shadow-lg border-0 uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-[0.98] mt-3" 
+                                        style="background: linear-gradient(90deg, #e11d48 0%, #ea580c 100%); color: white;">
+                                    Quero hospedar meus cursos aqui
+                                </button>
+                            </form>
+                            
+                            <div class="mt-4 flex items-center justify-center gap-2 opacity-60">
+                                <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                <span class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Criptografia de dados 256-bit</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-5">
+            <div class="col-md-4">
+                <div class="h-100 p-5 glass-card rounded-5" style="border: 1px solid #ef4444 !important; box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);">
+                    <h4 class="text-white fw-bold mb-3">Independência Financeira</h4>
+                    <p class="text-secondary leading-relaxed">Pare de pagar 10% do seu esforço para as plataformas. O lucro volta para você.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="h-100 p-5 glass-card rounded-5" style="border: 1px solid #eab308 !important; box-shadow: 0 0 20px rgba(234, 179, 8, 0.1);">
+                    <h4 class="text-white fw-bold mb-3">Experiência Cinematográfica</h4>
+                    <p class="text-secondary leading-relaxed">Área de membros com interface de streaming.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="h-100 p-5 glass-card rounded-5" style="border: 1px solid #3b82f6 !important; box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);">
+                    <h4 class="text-white fw-bold mb-3">Inteligência de Dados</h4>
+                    <p class="text-secondary leading-relaxed">Integre com seu CRM e controle o funil.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="successModal" class="fixed inset-0 z-[100] flex items-center justify-center invisible opacity-0 pointer-events-none transition-all duration-500">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeSuccessModal()"></div>
+    <div class="relative bg-slate-800 border border-green-500/30 p-8 rounded-3xl max-w-md text-center shadow-2xl transform scale-90 transition-all duration-300" id="successCard">
+        <div class="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500 animate-bounce">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+        </div>
+        <h2 class="text-3xl font-black text-white mb-2">Inscrição Confirmada!</h2>
+        <p class="text-slate-400 mb-8 leading-relaxed">Parabéns! Entraremos em contato em breve.</p>
+        <button onclick="closeSuccessModal()" class="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold transition shadow-lg shadow-green-900/20">Entendido, vamos lá!</button>
+    </div>
+</div>
+
+<script>
+    function openSuccessModal() {
+        const modal = document.getElementById('successModal');
+        const card = document.getElementById('successCard');
+        modal.classList.remove('invisible', 'opacity-0', 'pointer-events-none');
+        setTimeout(() => { card.classList.remove('scale-90'); card.classList.add('scale-100'); }, 10);
+    }
+    function closeSuccessModal() {
+        const modal = document.getElementById('successModal');
+        const card = document.getElementById('successCard');
+        card.classList.remove('scale-100'); card.classList.add('scale-90');
+        setTimeout(() => { modal.classList.add('invisible', 'opacity-0', 'pointer-events-none'); }, 300);
+    }
+    {% if success %}
+        document.addEventListener('DOMContentLoaded', function() { openSuccessModal(); });
+    {% endif %}
+</script>
+{% endblock %}
